@@ -14,7 +14,7 @@ public class ChatServer implements Runnable{
     private final static int PORT = 8000;
     private final static int MAX_CLIENTS = 5;
     private final static Executor executor = Executors.newFixedThreadPool(MAX_CLIENTS);
-    private static CopyOnWriteArrayList<String> messages = new CopyOnWriteArrayList<>();
+    private CopyOnWriteArrayList<String> messages;// = new CopyOnWriteArrayList<>();
 
     private final Socket clientSocket;
     private String clientName = "";
@@ -46,11 +46,11 @@ public class ChatServer implements Runnable{
                                 System.out.printf(messages.get(currentMessage));
                                 finalSocketWriter.println(messages.get(currentMessage));
                                 currentMessage++;
-                            try {
+                            /*try {
                                 Thread.sleep(100);
                             } catch (InterruptedException e) {
                                 e.printStackTrace();
-                            }
+                            }*/
                         }
                     }
             }).start();
@@ -103,7 +103,7 @@ public class ChatServer implements Runnable{
             serverSocket = new ServerSocket(PORT);
             SocketAddress serverSocketAddress = serverSocket.getLocalSocketAddress();
             System.out.println("Listening (" + serverSocketAddress + ").");
-            //CopyOnWriteArrayList<String> messages = new CopyOnWriteArrayList();
+            CopyOnWriteArrayList<String> messages = new CopyOnWriteArrayList();
             while (true) {
                 clientSocket = serverSocket.accept();
                 executor.execute(new ChatServer(clientSocket, messages));
