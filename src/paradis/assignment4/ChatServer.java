@@ -6,6 +6,7 @@ import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketAddress;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -13,12 +14,14 @@ public class ChatServer implements Runnable{
     private final static int PORT = 8000;
     private final static int MAX_CLIENTS = 5;
     private final static Executor executor = Executors.newFixedThreadPool(MAX_CLIENTS);
+    private static CopyOnWriteArrayList<String> messages = new CopyOnWriteArrayList<>();
 
     private final Socket clientSocket;
     private String clientName = "";
 
-    private ChatServer(Socket clientSocket) {
+    private ChatServer(Socket clientSocket, CopyOnWriteArrayList messages) {
         this.clientSocket = clientSocket;
+        this.messages = messages;
     }
 
     public void run() {
@@ -34,6 +37,23 @@ public class ChatServer implements Runnable{
             socketReader = new BufferedReader(
                     new InputStreamReader(clientSocket.getInputStream())
             );
+            //Skapa tråd för skriva ut meddelanden
+            PrintWriter finalSocketWriter = socketWriter;
+            new Thread(() -> {
+                    int currentMessage = messages.size();
+                    while (true){
+                        if(currentMessage < messages.size()){
+                                System.out.printf(messages.get(currentMessage));
+                                finalSocketWriter.println(messages.get(currentMessage));
+                                currentMessage++;
+                            try {
+                                Thread.sleep(100);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+            }).start();
 
             String threadInfo = " (" + Thread.currentThread().getName() + ").";
             String inputLine = socketReader.readLine();
@@ -42,14 +62,16 @@ public class ChatServer implements Runnable{
 
             // First message is client name.
             clientName = inputLine;
+            messages.add("Welcome " + clientName + "!");
 
             while (inputLine != null) {
-                socketWriter.println(inputLine);
-                System.out.println("Sent: \"" + inputLine + "\" to "
-                        + clientName + " " + remoteSocketAddress + threadInfo);
+                messages.add(clientName + ": " + inputLine);
+//                socketWriter.println(inputLine);
+//                System.out.println("Sent: \"" + inputLine + "\" to "
+//                        + clientName + " " + remoteSocketAddress + threadInfo);
                 inputLine = socketReader.readLine();
-                System.out.println("Received: \"" + inputLine + "\" from "
-                        + clientName + " " + remoteSocketAddress + threadInfo);
+//                System.out.println("Received: \"" + inputLine + "\" from "
+//                        + clientName + " " + remoteSocketAddress + threadInfo);
             }
             System.out.println("Closing connection " + remoteSocketAddress
                     + " (" + localSocketAddress + ").");
@@ -81,10 +103,10 @@ public class ChatServer implements Runnable{
             serverSocket = new ServerSocket(PORT);
             SocketAddress serverSocketAddress = serverSocket.getLocalSocketAddress();
             System.out.println("Listening (" + serverSocketAddress + ").");
-
+            //CopyOnWriteArrayList<String> messages = new CopyOnWriteArrayList();
             while (true) {
                 clientSocket = serverSocket.accept();
-                executor.execute(new ChatServer(clientSocket));
+                executor.execute(new ChatServer(clientSocket, messages));
             }
         }
         catch (Exception exception) {

@@ -3,19 +3,19 @@
 
 package paradis.assignment4;
 
-import java.net.Socket;
-import java.net.SocketAddress;
-import java.io.PrintWriter;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.Socket;
+import java.net.SocketAddress;
 
-class Client implements Runnable {
+class Client2 implements Runnable {
 	private final static String HOST = "127.0.0.1";
 	private final static int PORT = 8000;
-	
+
 	private final BufferedReader socketReader;
-	
-	private Client(BufferedReader socketReader) {
+
+	private Client2(BufferedReader socketReader) {
 		this.socketReader = socketReader;
 	}
 	
@@ -59,7 +59,7 @@ class Client implements Runnable {
 			);
 			
 			// Run socketReader in separate thread from consoleReader.
-			Thread thread = new Thread(new Client(socketReader));
+			Thread thread = new Thread(new Client2(socketReader));
 			thread.start();
 			
 			// Send messages.
