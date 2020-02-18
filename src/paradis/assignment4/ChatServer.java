@@ -37,6 +37,13 @@ public class ChatServer implements Runnable{
             socketReader = new BufferedReader(
                     new InputStreamReader(clientSocket.getInputStream())
             );
+
+
+            String threadInfo = " (" + Thread.currentThread().getName() + ").";
+            String inputLine = socketReader.readLine();
+            System.out.println("Received: \"" + inputLine + "\" from "
+                    + remoteSocketAddress + threadInfo);
+
             //Skapa tråd för skriva ut meddelanden
             PrintWriter finalSocketWriter = socketWriter;
             new Thread(() -> {
@@ -46,19 +53,18 @@ public class ChatServer implements Runnable{
                                 System.out.printf(messages.get(currentMessage));
                                 finalSocketWriter.println(messages.get(currentMessage));
                                 currentMessage++;
-                            /*try {
+
+                        }else{
+                            try {
                                 Thread.sleep(100);
                             } catch (InterruptedException e) {
                                 e.printStackTrace();
-                            }*/
+                            }
                         }
                     }
             }).start();
 
-            String threadInfo = " (" + Thread.currentThread().getName() + ").";
-            String inputLine = socketReader.readLine();
-            System.out.println("Received: \"" + inputLine + "\" from "
-                    + remoteSocketAddress + threadInfo);
+
 
             // First message is client name.
             clientName = inputLine;
