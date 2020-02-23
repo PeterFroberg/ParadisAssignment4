@@ -3,7 +3,7 @@ package paradis.assignment4;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-public class CopyOnWriteArrayList<T> {
+public class CopyOnWriteArrayList_Notinuse<T> {
     Object lock = new Object();
     volatile private Object[] array;
 
