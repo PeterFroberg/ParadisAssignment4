@@ -27,7 +27,6 @@ public class ChatServer implements Runnable{
         this.clientSocket = clientSocket;
         this.messages = messages;
         this.clientMessageQueue = clientMessageQueue;
-
     }
 
     public void run() {
@@ -43,8 +42,6 @@ public class ChatServer implements Runnable{
             socketReader = new BufferedReader(
                     new InputStreamReader(clientSocket.getInputStream())
             );
-
-
             String threadInfo = " (" + Thread.currentThread().getName() + ").";
             String inputLine = socketReader.readLine();
             System.out.println("Received: \"" + inputLine + "\" from "
@@ -53,7 +50,6 @@ public class ChatServer implements Runnable{
             //Skapa tråd för skriva ut meddelanden
             PrintWriter finalSocketWriter = socketWriter;
             new Thread(() -> {
-                    //int currentMessage = messages.size();
                 String mess;
                     while (true){
                         mess = (String) clientMessageQueue.poll();
@@ -67,22 +63,8 @@ public class ChatServer implements Runnable{
                                 e.printStackTrace();
                             }
                         }
-                        /*if(currentMessage < messages.size()){
-                                System.out.printf(messages.get(currentMessage));
-                                finalSocketWriter.println(messages.get(currentMessage));
-                                currentMessage++;
-
-                        }else{
-                            try {
-                                Thread.sleep(100);
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                        }*/
                     }
             }).start();
-
-
 
             // First message is client name.
 
@@ -143,8 +125,6 @@ public class ChatServer implements Runnable{
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-
-
                 }
             }).start();
 
