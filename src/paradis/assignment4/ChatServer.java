@@ -15,17 +15,16 @@ public class ChatServer implements Runnable {
     private final static int PORT = 8000;
     private final static int MAX_CLIENTS = 5;
     private final static Executor executor = Executors.newFixedThreadPool(MAX_CLIENTS);
-    private static CopyOnWriteArrayList<LinkedBlockingQueue> clientMessageQueues; // = new CopyOnWriteArrayList<>();
-    private static LinkedBlockingQueue<String> messages;
+    private static CopyOnWriteArrayList<LinkedBlockingQueue> clientMessageQueues;
 
+    private static Object lock = new Object();
     private final Socket clientSocket;
-    private String clientName; // = "";
+    private String clientName;
     private LinkedBlockingQueue clientMessageQueue;
 
-    private ChatServer(Socket clientSocket, LinkedBlockingQueue messages, LinkedBlockingQueue clientMessageQueue, CopyOnWriteArrayList clientMessageQueues) {
+    private ChatServer(Socket clientSocket, LinkedBlockingQueue clientMessageQueue, CopyOnWriteArrayList clientMessageQueues) {
 
         this.clientSocket = clientSocket;
-        this.messages = messages;
         this.clientMessageQueue = clientMessageQueue;
         this.clientMessageQueues = clientMessageQueues;
     }
@@ -47,12 +46,11 @@ public class ChatServer implements Runnable {
                 while (true) {
                     try {
                         mess = (String) clientMessageQueue.take();
-                        System.out.println("skickar till client:  " + mess);
+                        System.out.println("skickar till client in thread "+ Thread.currentThread().getName() + " : " + mess);
                         finalSocketWriter.println(mess);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-
                 }
             }).start();
 
@@ -63,28 +61,15 @@ public class ChatServer implements Runnable {
             System.out.println("Received: \"" + inputLine + "\" from "
                     + remoteSocketAddress + threadInfo);
 
-            //Skapa tråd för att skriva ut meddelanden
-
-
             // First message is client name.
             clientName = inputLine;
-            //messages.add("Welcome " + clientName + "!");
-
 
             while (inputLine != null) {
-               // messages.add(clientName + ": " + inputLine);
-//                String mess = messages.poll();
-//                if (mess != null) {
+                synchronized (lock) {
                     for (LinkedBlockingQueue que : clientMessageQueues) {
                         que.put(clientName + ": " + inputLine); // .add(mess);
                     }
-//                }
-
-
-
-                //socketWriter.println(inputLine);
-                //System.out.println("Sent: \"" + inputLine + "\" to "
-                //       + clientName + " " + remoteSocketAddress + threadInfo);
+                }
                 inputLine = socketReader.readLine();
                 System.out.println("Received: \"" + inputLine + "\" from "
                         + clientName + " " + remoteSocketAddress + threadInfo);
@@ -108,7 +93,7 @@ public class ChatServer implements Runnable {
     }
 
     public static void main(String[] args) {
-        System.out.println("Server2 started.");
+        System.out.println("Server started.");
 
         ServerSocket serverSocket = null;
         Socket clientSocket = null;
@@ -116,36 +101,14 @@ public class ChatServer implements Runnable {
             serverSocket = new ServerSocket(PORT);
             SocketAddress serverSocketAddress = serverSocket.getLocalSocketAddress();
             System.out.println("Listening (" + serverSocketAddress + ").");
-            //CopyOnWriteArrayList<String> messages = new CopyOnWriteArrayList();
             CopyOnWriteArrayList<LinkedBlockingQueue> clientMessageQueues = new CopyOnWriteArrayList<>();
-            //LinkedBlockingQueue<String> clientMessageQueue = new LinkedBlockingQueue<>();
             LinkedBlockingQueue<String> messages = new LinkedBlockingQueue<>();
-            new Thread(() -> {
-                String mess;
-                try {
-                    mess = messages.take();
-                    if (mess != null) {
-                        for (LinkedBlockingQueue que : clientMessageQueues) {
-                            que.put(mess); // .add(mess);
-                        }
-                    }/*else {
-                        try {
-                            Thread.sleep(100);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                    }*/
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }).start();
-
 
             while (true) {
                 clientSocket = serverSocket.accept();
                 LinkedBlockingQueue<String> clientMessageQueue = new LinkedBlockingQueue<>();
                 clientMessageQueues.add(clientMessageQueue);
-                executor.execute(new ChatServer(clientSocket, messages, clientMessageQueue, clientMessageQueues));
+                executor.execute(new ChatServer(clientSocket, clientMessageQueue, clientMessageQueues));
             }
         } catch (Exception exception) {
             System.out.println(exception);
