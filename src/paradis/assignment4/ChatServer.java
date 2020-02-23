@@ -1,3 +1,5 @@
+//Peter Fröberg, pefr7147
+
 package paradis.assignment4;
 
 import java.io.BufferedReader;
