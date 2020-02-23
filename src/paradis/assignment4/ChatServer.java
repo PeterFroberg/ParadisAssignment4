@@ -23,7 +23,7 @@ public class ChatServer implements Runnable {
     private LinkedBlockingQueue clientMessageQueue;
 
     private ChatServer(Socket clientSocket, LinkedBlockingQueue messages, LinkedBlockingQueue clientMessageQueue, CopyOnWriteArrayList clientMessageQueues) {
-        this.clientName = "";
+
         this.clientSocket = clientSocket;
         this.messages = messages;
         this.clientMessageQueue = clientMessageQueue;
@@ -68,7 +68,7 @@ public class ChatServer implements Runnable {
 
             // First message is client name.
             clientName = inputLine;
-            messages.add("Welcome " + clientName + "!");
+            //messages.add("Welcome " + clientName + "!");
 
 
             while (inputLine != null) {
